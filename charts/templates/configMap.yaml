@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-postgres
+data:
+  postgres_host: {{ .Values.db.setName }}
+  postgres_database: {{ .Values.db.name }}
+  postgres_user: {{ .Values.db.user }}
+  postgres_password: {{ .Values.db.password }}  
+  postgres_data: "{{ .Values.db.dataDir }}/pgdata"
+  create_table.sql: |
+    CREATE TABLE IF NOT EXISTS todos_todo (
+      id serial NOT NULL,
+      content text NOT NULL,
+      PRIMARY KEY (id) 
+    );

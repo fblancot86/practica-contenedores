@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: web
+  labels:
+    app: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels: 
+        app: web
+    spec: 
+      containers: 
+      - name: web
+        image: fblanco86/django-todo:alpine-2
+        imagePullPolicy: Always
+        command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+        env:
+          - name: APP_DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_database
+          - name: APP_DB_USER
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_user
+          - name: APP_DB_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_password 
+          - name: APP_DB_HOST
+            value: db
+          - name: APP_DB_PORT
+            value: "5432"
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 200m
+          limits:
+            memory: 64Mi
+            cpu: 500m       
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 20
+          timeoutSeconds: 2                   
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - web
+              topologyKey: "kubernetes.io/hostname"
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - db
+            topologyKey: "kubernetes.io/hostname"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ClusterIP 
+  selector:
+    app: web
+  ports: 
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000 

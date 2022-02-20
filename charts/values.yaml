@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: fblanco86/django-todo
+  pullPolicy: Always
+  tag: "alpine-2"
+
+podAnnotations: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+
+deploy:
+  labelkey: app
+  label: web
+  port: 8000  
+
+db:
+  setName: db
+  imageTag: 13.0-alpine
+  labelkey: app
+  label: db
+  name: todo
+  user: docker
+  password: docker
+  dataDir: /data
+  port: 5432  
+
+ingress:
+  enabled: true
+  externalIP: 34.141.78.174
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  cpuPercentage: 75
+  memPercentage: 75

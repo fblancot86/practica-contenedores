@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: {{ include "todos-chart.fullname" . }}
+  labels:
+    {{- .Values.deploy.labelkey | nindent 4}}: {{ .Values.deploy.label }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- .Values.deploy.labelkey | nindent 6}}: {{ .Values.deploy.label }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- .Values.deploy.labelkey | nindent 8}}: {{ .Values.deploy.label }}
+    spec: 
+      containers: 
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}          
+        command: ["python", "manage.py", "runserver", "0.0.0.0:{{ .Values.deploy.port }}"]
+        env:
+          - name: APP_DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_database
+          - name: APP_DB_USER
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_user
+          - name: APP_DB_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_password 
+          - name: APP_DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: config-postgres
+                key: postgres_host
+          - name: APP_DB_PORT
+            value: {{ .Values.db.port | quote }}
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 200m
+          limits:
+            memory: 64Mi
+            cpu: 500m       
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.deploy.port }} 
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.deploy.port }} 
+          initialDelaySeconds: 20
+          timeoutSeconds: 2                   
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: {{ .Values.deploy.labelkey }}
+                  operator: In
+                  values:
+                  - {{ .Values.deploy.label }}
+              topologyKey: "kubernetes.io/hostname"
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: {{ .Values.db.labelkey }}
+                operator: In
+                values:
+                - {{ .Values.db.label }}
+            topologyKey: "kubernetes.io/hostname"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "todos-chart.fullname" . }}
+  labels:
+    {{- .Values.deploy.labelkey | nindent 6}}: {{ .Values.deploy.label }}
+spec:
+  type: {{ .Values.service.type }} 
+  selector:
+    {{- .Values.deploy.labelkey | nindent 6}}: {{ .Values.deploy.label }}
+  ports: 
+  - protocol: TCP
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.deploy.port }} 
