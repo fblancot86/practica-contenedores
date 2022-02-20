@@ -14,7 +14,7 @@ Revisar el ConfigMap, podemos modificar el usuario (postgres_user) y contraseña
 
 Una vez donfigurados esos valores, procederemos a lanzar el siguiente comando:
 
-```mermaid
+```
 kubectl apply -f configMap.yaml
 ```
 
@@ -24,7 +24,7 @@ kubectl apply -f configMap.yaml
 
 Ahora ya podemos empezar a lanzar los diferentes recursos, necesarios para el funcionamiento de nuestra aplicación:
 
-```mermaid
+```
 kubectl apply -f db.yaml
 ```
 
@@ -38,7 +38,7 @@ Por último, este manifiesto creará un Volúmen persistente a través de un Per
 
 Una vez tengamos levantado el StatefulSet con la base de datos, lanzaremos la aplicación web.
 
-```mermaid
+```
 kubectl apply -f web.yaml
 ```
 
@@ -50,7 +50,7 @@ También levantará un Servicio ClusterIP, que más adelante se usará para hace
 
 Para darle a nuestra aplicación de mayor consistencia le daremos escalabilidad horizontal a la web, de manera que crearemos un HPA para que escale desde 1 a un máximo de 3, siempre que supere un 75% de la cpu o la memoria de sus pods.
 
-```mermaid
+```
 kubectl apply -f hpa.yaml
 ```
 
@@ -62,7 +62,7 @@ Por último, para hacerlo accesible desde el exterior necesitaremos seguir los s
 
 Cuando ya tengamos el fichero ingress bien configurado, procedemos a levantarlo:
 
-```mermaid
+```
 kubecctl apply -f ingress.yaml
 ```
 

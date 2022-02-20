@@ -15,7 +15,7 @@ La aplicación se puede instalar de varias formas, según la que usemos deberemo
 
 Desde el directorio raíz del proyecto ejecutar el siguiente comando:
 
-```mermaid
+```
 docker-compose up
 ```
 

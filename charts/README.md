@@ -46,7 +46,7 @@ Estos son los valores que se puede modificar:
 
 Ahora ya podemos Instalar la aplicación web Django + base de datos Postgres:
 
-```mermaid
+```
 helm install to-dos .
 ```
 
@@ -62,7 +62,7 @@ Para hacerlo accesible desde el exterior con Ingerss, necesitaremos seguir los s
 
 
 ## Desinstalación
-```mermaid
+```
 kubecctl uninstall to-dos
 ```
 
